@@ -7,6 +7,7 @@
 unsigned char buffer[128] = {0,};
 bool loraSent = false;
 bool irrigate = false;
+short rssi = 0;
 
 // Forward declarations
 void key_scan(void *arg);
@@ -49,7 +50,7 @@ void key_scan(void *arg)
 void onReceive()
 {
   short length = 0;
-  short rssi = 0;
+
 
   memset(buffer, 0, 128);
   length = lora.receivePacketP2PMode(buffer, 128, &rssi, 1);
