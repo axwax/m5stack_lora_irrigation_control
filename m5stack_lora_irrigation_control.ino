@@ -5,18 +5,13 @@
 //#include <Metro.h>
 
 unsigned char buffer[128] = {0,};
+bool loraSent = false;
+bool irrigate = false;
 
-
-void key_scan(void *arg)
-{
-  while (1)
-  {
-    onReceive();
-    delay(10);
-    // lora.loraDebug();
-  }
-  vTaskDelete(NULL);
-}
+// Forward declarations
+void key_scan(void *arg);
+void onReceive();
+void sendLora();
 
 void setup() {
   M5.begin();
@@ -36,6 +31,19 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
+}
+
+
+
+void key_scan(void *arg)
+{
+  while (1)
+  {
+    onReceive();
+    delay(10);
+    // lora.loraDebug();
+  }
+  vTaskDelete(NULL);
 }
 
 void onReceive()
@@ -74,12 +82,13 @@ void onReceive()
     if (recMessage.success()) {
       recMessage.printTo(SerialUSB);
       int activeValve = (int) recMessage["activeValve"];
+      irrigate = (bool) recMessage["irrigate"];
       M5.Lcd.setCursor(0, 18);
       M5.Lcd.fillRect(0, 18, 320, 222, BLACK);
-      if(activeValve > 0){
+      if(irrigate){
         //SerialUSB.print(String(activeValve));
         M5.Lcd.println("RSSI: " + String(rssi));     
-        M5.Lcd.println("valve " + String(activeValve) + " open");
+        M5.Lcd.println("valve " + String(activeValve+1) + " open");
       }
       else {
         M5.Lcd.println("RSSI: " + String(rssi));     
@@ -89,4 +98,20 @@ void onReceive()
     SerialUSB.println();
 
   }
+}
+
+void sendLoraMsg(){
+      // send lora
+      char json[500];
+      StaticJsonBuffer<500> jsonBuffer;
+      JsonObject& sendMessage = jsonBuffer.createObject();
+      sendMessage["rssi"] = rssi;
+      sendMessage["irrigate"] = irrigate;
+      //sendMessage["enabledValves"] = {true, false, true, false};
+      
+      // Send Packet
+      String sMessage;
+      sendMessage.printTo(sMessage);
+      lora.transferPacketP2PMode(sMessage);
+      loraSent = true;
 }
