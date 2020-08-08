@@ -30,8 +30,12 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
 
+  if (M5.BtnC.wasPressed()) {
+    irrigate = !irrigate;
+    sendLoraMsg();
+  }
+  M5.update();
 }
 
 
