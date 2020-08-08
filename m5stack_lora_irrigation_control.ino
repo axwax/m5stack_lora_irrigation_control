@@ -16,7 +16,7 @@ void sendLora();
 
 void setup() {
   M5.begin();
-  SerialUSB.begin(9600);
+  SerialUSB.begin(115200);
   lora.init();
   delay(2000); // must delay for lorawan power on
   lora.initP2PMode(868, SF7, BW125, 8, 8, 20);
