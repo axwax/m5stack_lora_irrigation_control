@@ -27,6 +27,8 @@ void setup() {
   //M5.Lcd.setTextColor(WHITE);
   int core = xPortGetCoreID();
   xTaskCreatePinnedToCore(key_scan, "key_scan", 3096, NULL, 5, NULL, 0);
+  SerialUSB.println();
+  SerialUSB.println("Irrigation Control is ready");
 }
 
 void loop() {
