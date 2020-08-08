@@ -69,25 +69,24 @@ void onReceive()
     SerialUSB.println(rssi);
     SerialUSB.print("Data is: ");
 
-
-
-    StaticJsonBuffer<500> jsonBuffer;
+    // download lora data into json variable
     char json[500];
     json[0] = '\0';
-    
-
-    for (unsigned char i = 0; i < length; i++)
-    {
-      SerialUSB.print((char)buffer[i]);
-
+    for (int i = 0; i < length; i++) {
       byte hi = strlen(json);
       json[hi] = (char)buffer[i];
       json[hi + 1] = '\0';      
     }
+    
+    DynamicJsonDocument recMessage(1024);
+    DeserializationError error = deserializeJson(recMessage, json);
+    if (error) {
+      SerialUSB.println("error:");
+      SerialUSB.println(error.c_str());
+      return;
+    }
+    serializeJson(recMessage, SerialUSB);
 
-    JsonObject& recMessage = jsonBuffer.parse(json);
-    if (recMessage.success()) {
-      recMessage.printTo(SerialUSB);
       int activeValve = (int) recMessage["activeValve"];
       irrigate = (bool) recMessage["irrigate"];
       M5.Lcd.setCursor(0, 18);
@@ -101,24 +100,22 @@ void onReceive()
         M5.Lcd.println("RSSI: " + String(rssi));     
         M5.Lcd.println("irrigation stopped");      
       }
-    }
+ 
     SerialUSB.println();
-
   }
 }
 
 void sendLoraMsg(){
       // send lora
-      char json[500];
-      StaticJsonBuffer<500> jsonBuffer;
-      JsonObject& sendMessage = jsonBuffer.createObject();
+      DynamicJsonDocument sendMessage(1024);
       sendMessage["rssi"] = rssi;
       sendMessage["irrigate"] = irrigate;
-      //sendMessage["enabledValves"] = {true, false, true, false};
-      
-      // Send Packet
+      sendMessage["enabledValves"] = serialized("[true, false, true, false]");
       String sMessage;
-      sendMessage.printTo(sMessage);
-      lora.transferPacketP2PMode(sMessage);
+      serializeJson(sendMessage, sMessage);
+
+      lora.transferPacketP2PMode(const_cast<char*>(sMessage.c_str()));
       loraSent = true;
+      SerialUSB.println("irrigate:"+String(irrigate));
+      SerialUSB.println(sMessage);
 }
