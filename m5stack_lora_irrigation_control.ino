@@ -25,6 +25,29 @@ void setup() {
   M5.Lcd.setTextFont(2);
   M5.Lcd.println("Irrigation Control");
   //M5.Lcd.setTextColor(WHITE);
+
+// power settings
+  Wire.begin(); // required to access IP5306
+  M5.Power.begin();
+  M5.Power.setPowerBoostOnOff(false); //Change the power on / off method. The power does not turn off when connected via USB. true=Press and hold to turn on / off. false=Turn on / off with two short presses.
+  M5.Power.setPowerBoostSet(true); //Change the power on / off method true=ON / OFF in one short press. false=same as above
+  M5.Power.setPowerVin(true); //When the power supply from USB etc. is cut off, Decide whether to turn on the power again.
+  M5.Power.setPowerBtnEn(true); //Set whether to accept the power button.
+  M5.Power.setPowerBoostKeepOn(false); //Always output power. True= Always output power. False=not Always output power.
+  M5.Power.setAutoBootOnLoad(false); //Set whether to automatically start when power consumption occurs
+  
+  if(!M5.Power.canControl())
+  {
+  M5.Lcd.setTextColor(RED);
+  M5.Lcd.printf("No communication with IP5306 chip");
+  while(1);
+  }
+  uint8_t bat = M5.Power.getBatteryLevel();
+  if (M5.Power.isCharging()) M5.Lcd.printf("Battery is charging\r\n");
+  else M5.Lcd.printf("Battery is not charging\r\n");
+  M5.Lcd.printf("Battery Level %d", bat);
+
+
   int core = xPortGetCoreID();
   xTaskCreatePinnedToCore(key_scan, "key_scan", 3096, NULL, 5, NULL, 0);
   SerialUSB.println();
